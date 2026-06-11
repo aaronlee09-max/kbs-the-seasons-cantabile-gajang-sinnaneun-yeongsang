@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTube Playlist</title>
+
+<style>
+body{
+    margin:0;
+    background:#000;
+    color:#fff;
+    font-family:Arial,sans-serif;
+}
+
+#player{
+    width:100%;
+    height:60vh;
+    border:none;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+    gap:12px;
+    padding:12px;
+}
+
+.card{
+    background:#111;
+    border-radius:10px;
+    overflow:hidden;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.card:hover{
+    transform:scale(1.03);
+}
+
+.card img{
+    width:100%;
+    display:block;
+}
+
+.title{
+    padding:8px;
+    font-size:13px;
+    color:#ddd;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<iframe
+id="player"
+src="https://www.youtube.com/embed/lgaXjICBcsc?autoplay=1&mute=1&controls=1"
+allow="autoplay; encrypted-media"
+allowfullscreen>
+</iframe>
+
+<div id="grid" class="grid"></div>
+
+<script>
+
+/* =========================
+   🔑 API KEY
+   ========================= */
+const API_KEY = "AIzaSyDlZ1MbNErffWAZFClz90ORgSoWtIBu5vs";
+
+/* =========================
+   📌 56개 영상 리스트 (사용자 추가 곡 상단 배치)
+   ========================= */
+const videos = [
+"4fX-UipZ55Q", // 조정석 - 아로하 (최종 추가 완료)
+"GixWRpHRTGU", // 이승철 - 아마추어
+"Ko5FYPm8J9w", // 정은지X이준영 - 이 밤이 지나면
+"lgaXjICBcsc",
+"003V9eO5knI",
+"i2IK99Kli4E",
+"h9vxTcUPz98",
+"MOtYJB8P0x0",
+"moaAhsbh5Ds",
+"ehrbOi8b4c4",
+"iwFriq4fPQU",
+"9PjnL0mRYm0",
+"T6ZYfaQqLyg",
+"57D_tv9pj74",
+"7V8JI93Lov4",
+"tU3nx-f97WM",
+"zKd2p9Y6yEY",
+"CCa4SuJCxA4",
+"An0Tgf74XOY",
+"qT8dDKNtPjo",
+"V9HV8EoSyR4",
+"So9BeU_Vy20",
+"OLMK2AfMPjo",
+"ZH-VB-jSVaU",
+"6ef-aCP5zMY",
+"qtRCPzBpsA0",
+"vbjLJnlB2kg",
+"UbQFWXsoAM8",
+"e6ngDwYb6Zo",
+"gpDV5qUXNYc",
+"8asxySoKbTk",
+"vsm7CWw5MYc",
+"8qoFBIkTAHk",
+"-jCweiey59w",
+"BJRlZ0R4nuE",
+"nV9TUVZHAOg",
+"KqSLDtq3PEM",
+"XEIb3JcUugc",
+"Pj4ktP1rFVI",
+"GwA-xw_HqyI",
+"JzD9Yt4oaeA",
+"NzvOfO2m_wY",
+"OfLnC5zrExg",
+"8t2BNHNv95s",
+"GK5tm8Atfi0",
+"EOHEfNk8hMc",
+"GTFVNJQ4R5M",
+"eiGZqx9e-Ms",
+"jOQDCgBW6a0",
+"bxrGfZCPDhQ",
+"DY-C-yNVj9M",
+"dnoKwmHc6Pg",
+"cpZAJoDh0Yo",
+"Op4Y9M0d4bw",
+"fvIK6jM4118",
+"LxnMunnTJ1c"
+];
+
+const grid = document.getElementById("grid");
+
+/* =========================
+   ▶ 재생 (클릭 시에는 소리가 나오도록 mute=1 제거)
+   ========================= */
+function play(id){
+    document.getElementById("player").src =
+        "https://www.youtube.com/embed/" + id + "?autoplay=1&controls=1";
+}
+
+/* =========================
+   🔄 API 로드 + 제목 표시 (50개씩 쪼개서 요청)
+   ========================= */
+async function loadVideos(){
+    const titleMap = {};
+    const chunkSize = 50;
+
+    // 영상을 50개 단위로 나누어 API 요청 진행
+    for (let i = 0; i < videos.length; i += chunkSize) {
+        const chunk = videos.slice(i, i + chunkSize);
+        const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${chunk.join(",")}&key=${API_KEY}`;
+        
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            (data.items || []).forEach(item => {
+                titleMap[item.id] = item.snippet.title;
+            });
+        } catch (error) {
+            console.error("유튜브 API 로드 중 오류 발생:", error);
+        }
+    }
+
+    // 화면에 리스트 그리기
+    videos.forEach(id => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+            <img src="https://img.youtube.com/vi/${id}/mqdefault.jpg" alt="thumbnail">
+            <div class="title">
+                ${titleMap[id] || "제목 없음"}
+            </div>
+        `;
+
+        card.onclick = () => play(id);
+        grid.appendChild(card);
+    });
+}
+
+/* =========================
+   🚀 실행
+   ========================= */
+loadVideos();
+
+</script>
+
+</body>
+</html>
